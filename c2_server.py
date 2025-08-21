@@ -12,7 +12,10 @@ BIND_ADDR = ""
 class C2Handler(BaseHTTPRequestHandler):
     """This is a child class of the BaseHTTPRequestHandler class.
     It handles all HTTP requests that arrive at the c2 server."""
-    
+
+    # Make our c2 server look like an up-ti-date Apache server on CentOS
+    server_version = "Apache/2.4.58"
+    sys_version = "(CentOS)"
 
     # noinspection PyPep8Naming
     def do_GET(self):
@@ -22,6 +25,9 @@ class C2Handler(BaseHTTPRequestHandler):
         # Sends the HTTP response code and header back to the client
         self.send_response(404)
         self.end_headers()
+
+print("server_version: ", C2Handler.server_version)
+print("sys_version: ", C2Handler.sys_version)
 
 # Instantiate our HTTPServer object
 # noinspection PyTypeChecker
