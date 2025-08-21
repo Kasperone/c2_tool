@@ -1,6 +1,7 @@
 # Command and Control server code
 
-from http.server import BaseHTTPRequestHandler
+from http import server
+from http.server import BaseHTTPRequestHandler, HTTPServer
 
 # Port c2 server listens on
 PORT = 80
@@ -21,4 +22,16 @@ class C2Handler(BaseHTTPRequestHandler):
         # Sends the HTTP response code and header back to the client
         self.send_response(404)
         self.end_headers()
-        pass
+
+# Instantiate our HTTPServer object
+# noinspection PyTypeChecker
+server = HTTPServer((BIND_ADDR, PORT), C2Handler)
+
+# Run the server in an infinite loop
+server.serve_forever()
+
+
+# def run(server_class=HTTPServer, handler_class=BaseHTTPRequestHandler):
+# server_address = ('', 8000)
+# httpd = server_class(server_address, handler_class)
+# httpd.serve_forever()
