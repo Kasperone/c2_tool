@@ -13,5 +13,11 @@ HEADER = {
 # PROXY = None {"https": "proxy.some-site.com:443"}
 PROXY = None
 
-x = get(url='http://localhost:80', headers=HEADER, proxies=PROXY)
-print(x.request.headers)
+# Port c2 server listens on
+PORT = 80
+
+# Set the c2 server's IP address or hostname
+C2_SERVER = "localhost"
+
+x = get(url=f"http://{C2_SERVER}:{PORT}", headers=HEADER, proxies=PROXY)
+print(x.headers)
