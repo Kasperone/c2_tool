@@ -7,10 +7,10 @@ PORT = 80
 CMD_REQUEST = "/book?isbn="
 
 # Path to use for signifying command output from a client using HTTP POST
-CMD_RESPONSE = "/inventory"
+RESPONSE_PATH = "/inventory"
 
 # POST variable name to use for assigning to command output from a client
-CMD_RESPONSE_KEY = "index"
+RESPONSE_KEY = "index"
 
 # ----------------------  Begin c2 server code only variables  ----------------------
 
