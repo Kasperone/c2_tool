@@ -6,8 +6,11 @@ PORT = 80
 # Path to use for signifying a command request from a client using HTTP GET
 CMD_REQUEST = "/book?isbn="
 
-# Path to use for signifying command output from a client using HTTP POST
-RESPONSE_PATH = "/inventory"
+# Path to use for signifying command output or errors from a client using HTTP POST
+RESPONSE = "/inventory"
+
+# Path to use for signifying a command the current working direcory from a client using HTTP POST
+CWD_RESPONSE ="/title"
 
 # POST variable name to use for assigning to command output from a client
 RESPONSE_KEY = "index"
