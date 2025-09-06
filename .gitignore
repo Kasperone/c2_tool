@@ -38,6 +38,9 @@ wheels/
 .DS_Store
 Thumbs.db
 
+# Docker
+.dockerignore
+
 # Project specific
 *.log
 *.tmp

