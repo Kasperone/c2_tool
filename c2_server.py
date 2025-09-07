@@ -164,7 +164,7 @@ class C2Handler(BaseHTTPRequestHandler):
         client_data = unquote_plus(client_data)
 
         # Encode the client data because decrypt requires it, then decrypt, then decode
-        client = cipher.decrypt(client_data.encode()).decode()
+        client_data = cipher.decrypt(client_data.encode()).decode()
 
         # Return the processed client's data
         return client_data
