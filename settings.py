@@ -3,6 +3,9 @@
 # Port c2 server listens on
 PORT = 80
 
+# This key must be 32 characters or fewer
+KEY = "YOUR KEY"
+
 # Path to use for signifying a command request from a client using HTTP GET
 CMD_REQUEST = "/book?isbn="
 

