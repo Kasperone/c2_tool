@@ -9,6 +9,9 @@ KEY = "YOUR KEY"
 # Path to use for signifying a command request from a client using HTTP GET
 CMD_REQUEST = "/book?isbn="
 
+# Path to use for signifying a file download request from a client using HTTP GET
+FILE_REQUEST = "/author?name="
+
 # Path to use for signifying command output or errors from a client using HTTP POST
 RESPONSE = "/inventory"
 

