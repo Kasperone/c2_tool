@@ -12,6 +12,9 @@ CMD_REQUEST = "/book?isbn="
 # Path to use for signifying a file download request from a client using HTTP GET
 FILE_REQUEST = "/author?name="
 
+# Path to use for signifying a file upload from client using HTTP PUT
+FILE_SEND = "/reviews"
+
 # Path to use for signifying command output or errors from a client using HTTP POST
 RESPONSE = "/inventory"
 
@@ -25,6 +28,9 @@ RESPONSE_KEY = "index"
 
 # Leave blank for binding to all interfaces, otherwise specify c2 server's IP address
 BIND_ADDR = ""
+
+# Directory to hold uploaded client files
+STORAGE = "incoming"
 
 # Command input timeout setting in seconds; 225 is about right for Azure; set to NONE if not needed
 # INPUT_TIMEOUT = 3
