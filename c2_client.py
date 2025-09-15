@@ -78,7 +78,7 @@ while True:
             filepath = command.split()[2]
 
             # Split out the filename from the end of the filepath or if only a filename was supplied, use it
-            filename = filepath.rsplit("/", 1)[-1] or filepath
+            filename = filepath.replace("\\", "/").rsplit("/", 1)[-1]
 
             # UTF-8 encode the filename first to be able to encrypt it, but then we must decode it after the encryption
             encrypted_filepath = cipher.encrypt(filepath.encode()).decode()
@@ -109,7 +109,7 @@ while True:
             filepath = command.split()[2]
 
             # Split out the filename from the end of the filepath or if only a filename was supplied, use it
-            filename = filepath.rsplit("/", 1)[-1]
+            filename = filepath.replace("\\", "/").rsplit("/", 1)[-1]
 
             # Byte encode the filename first to be able to encrypt it, but then we must decode it after the encryption
             encrypted_filename = cipher.encrypt(filename.encode()).decode()
