@@ -24,6 +24,9 @@ CWD_RESPONSE ="/title"
 # POST variable name to use for assigning to command output from a client
 RESPONSE_KEY = "index"
 
+# Password used for encrypting and decrypting zip files; must br bytes data type
+ZIP_PASSWORD = b"*--->Your_Password<---*"
+
 # ----------------------  Begin c2 server code only variables  ----------------------
 
 # Leave blank for binding to all interfaces, otherwise specify c2 server's IP address

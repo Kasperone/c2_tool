@@ -2,5 +2,6 @@ certifi==2025.8.3
 charset-normalizer==3.4.3
 idna==3.10
 inputimeout==1.0.4
+pyzipper==0.3.6
 requests==2.32.5
 urllib3==2.5.0
