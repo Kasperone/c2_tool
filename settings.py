@@ -3,7 +3,7 @@
 # Port c2 server listens on
 PORT = 80
 
-# This key must be 32 characters or fewer
+# This key must be 32 characters long or fewer
 KEY = "YOUR KEY"
 
 # Path to use for signifying a command request from a client using HTTP GET
@@ -18,13 +18,13 @@ FILE_SEND = "/reviews"
 # Path to use for signifying command output or errors from a client using HTTP POST
 RESPONSE = "/inventory"
 
-# Path to use for signifying a command the current working direcory from a client using HTTP POST
+# Path to use for signifying the current working directory from a client using HTTP POST
 CWD_RESPONSE ="/title"
 
 # POST variable name to use for assigning to command output from a client
 RESPONSE_KEY = "index"
 
-# Password used for encrypting and decrypting zip files; must br bytes data type
+# Password used for encrypting and decrypting zip files; must be bytes data type
 ZIP_PASSWORD = b"*--->Your_Password<---*"
 
 # ----------------------  Begin c2 server code only variables  ----------------------

