@@ -3,7 +3,7 @@ from base64 import urlsafe_b64encode
 from settings import KEY
 
 def pad_key(key):
-    """ This function will satisfy the Ferent encryption API requirement of having a full 32 character key. """
+    """ This function will satisfy the Fernet encryption API requirement of having a full 32 character key. """
     while len(key) % 32 != 0:
         key += "P"
     return key

