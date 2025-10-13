@@ -13,10 +13,13 @@ def get_new_session():
     exist, allow the red team operator to pick one to become an active session. """
 
     # These variables must be global as they will often be updated via multiple sessions
-    global active_session, pwned_dict, pwned_id
+    global active_session, pwned_dict, pwned_id, cwd
 
     # Remove the dictionary entry for the current active session
     del pwned_dict[active_session]
+
+    # Reinitialize cwd to its starting value of tilde
+    cwd = "~"
 
     # If dictionary is empty, re-initialize variables to their starting values
     if not pwned_dict:
