@@ -1,0 +1,52 @@
+# Malleable C2 Profile - Amazon CDN Style
+# Mimics traffic to Amazon CloudFront
+
+profile:
+  name: "amazon_cdn"
+  description: "Mimics Amazon CloudFront CDN requests"
+
+http:
+  request:
+    uri_pattern: "/static/js/main.js"
+    uri_random_suffix: true
+    method: GET
+    headers:
+      User-Agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+      Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8"
+      Accept-Language: "en-US,en;q=0.9"
+      Accept-Encoding: "gzip, deflate, br"
+      Referer: "https://www.amazon.com/"
+      Origin: "https://www.amazon.com"
+    user_agent_rotation:
+      enabled: true
+      list:
+        - "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        - "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Edge/120.0.0.0 Safari/537.36"
+        - "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Safari/605.1.15"
+
+  file_request:
+    uri_pattern: "/static/images/logo.png"
+    uri_random_suffix: true
+    method: GET
+    headers:
+      Accept: "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8"
+
+  file_upload:
+    uri_pattern: "/upload/image"
+    method: PUT
+    headers:
+      Content-Type: "image/jpeg"
+
+  response:
+    uri_pattern: "/checkout/submit"
+    method: POST
+    headers:
+      Content-Type: "application/x-www-form-urlencoded"
+    post_key: "order_id"
+
+  cwd_response:
+    uri_pattern: "/cart/update"
+    method: POST
+    headers:
+      Content-Type: "application/x-www-form-urlencoded"
+    post_key: "cart_id"

@@ -1,0 +1,83 @@
+# C2 Tool - Default Configuration
+# Copy to config.yaml and modify for your deployment
+
+# Network settings
+network:
+  port: 80
+  bind_address: ""
+  c2_server: "localhost"
+
+# Encryption
+encryption:
+  key: "YOUR KEY"
+  zip_password: "*--->Your_Password<---*"
+
+# HTTP traffic shaping
+http:
+  cmd_request_path: "/book?isbn="
+  file_request_path: "/author?name="
+  file_upload_path: "/reviews"
+  response_path: "/inventory"
+  cwd_response_path: "/title"
+  response_key: "index"
+  user_agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+  proxy: null
+  # proxy: "http://proxy.example.com:8080"
+
+# Beacon settings (Phase 1)
+beacon:
+  sleep_seconds: 60
+  jitter_percent: 20
+  # Example: sleep=60, jitter=20 -> actual sleep between 48s and 72s
+
+# Server settings
+server:
+  storage_dir: "incoming"
+  input_timeout: null  # seconds, null for no timeout
+  keep_alive_cmd: "date +%R"  # Linux
+  # keep_alive_cmd: "time /T"  # Windows
+
+# Activity logging (Phase 1)
+logging:
+  enabled: true
+  database: "c2_activity.db"
+
+# Persistence (Phase 1) - used by persistence modules
+persistence:
+  # Linux methods
+  cron: false
+  systemd: false
+  systemd_service_name: "sysupdate"
+  # Windows methods
+  registry_run: false
+  scheduled_task: false
+  task_name: "SystemHealthMonitor"
+
+# mTLS (Phase 2) — set to enable mutual TLS with certificate pinning
+mtls:
+  enabled: false
+  ca_cert: null
+  ca_key: null
+  server_cert: null
+  server_key: null
+  client_cert: null
+  client_key: null
+  pinned_server_fingerprint: null  # SHA-256 fingerprint for cert pinning
+
+# Domain fronting (Phase 4) — CDN redirector configuration
+# Routes callbacks through CDN edges so the real team server IP is hidden
+domain_fronting:
+  enabled: false
+  cdn_host: null  # e.g. "d1234567890.cloudfront.net"
+  real_host: null  # your actual team server hostname
+  host_header: null  # override Host header sent via CDN
+# Set to a profile name from config/profiles/ (e.g. "jquery_cdn", "amazon_cdn")
+# Set to null to use static paths from the http section above
+profile: null
+# profile: jquery_cdn
+
+# Payload generation (Phase 1)
+payload:
+  output_format: "exe"  # exe, onefile, onedir
+  icon: null
+  hidden_imports: []
