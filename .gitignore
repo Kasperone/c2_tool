@@ -44,3 +44,8 @@ Thumbs.db
 # Project specific
 *.log
 *.tmp
+temp.py
+*.gpg
+
+# Incoming files from clients
+incoming/
