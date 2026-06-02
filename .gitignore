@@ -1,51 +1,42 @@
-# Virtual Environment
-venv/
-.venv/
-env/
-.env/
-
 # Python
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
 *.egg-info/
-.installed.cfg
+dist/
+build/
 *.egg
 
-# IDE
+# Virtual environment
+venv/
+.venv/
+
+# Uploaded files (server receives these at runtime)
+incoming/
+
+# Scratch / temp files
+temp.py
+
+# Stray files
+*.gpg
+
+# IDE / editor
 .vscode/
-.cursor/
 .idea/
-*.swp
-*.swo
 *~
 
 # OS
 .DS_Store
 Thumbs.db
+desktop.ini
 
-# Docker
-.dockerignore
+# Secrets - uncomment if settings.py contains real keys for production
+# settings.py
 
 # Project specific
 *.log
 *.tmp
-temp.py
-*.gpg
 
-# Incoming files from clients
-incoming/
+# Hermes agent artifacts
+.hermes/
