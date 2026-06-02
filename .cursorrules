@@ -1,0 +1,43 @@
+# Project Rules
+
+You are working on an HTTP-based C2 (Command and Control) framework for authorized penetration testing and educational use.
+
+## Stack
+- Python 3.10+ (uses union type syntax: `int | str`)
+- stdlib HTTP server (`http.server`, `socketserver.ThreadingMixIn`)
+- `requests` library for client HTTP
+- `cryptography` (Fernet / AES-128-CBC) for all communications encryption
+- `pyzipper` (AES-Zip + LZMA) for file-level encryption
+
+## Architecture
+- `settings.py` — single source of all config; imported by both server and client
+- `encryption.py` — thin wrapper that creates a Fernet `cipher` object from `KEY`
+- `c2_server.py` — threaded HTTP server, session management, command dispatch
+- `c2_client.py` — polling loop implant, command execution, file transfer
+
+## Coding Conventions
+- No external frameworks (Flask, FastAPI, etc.) — stdlib only for the server
+- All HTTP paths disguised as legitimate web traffic (`/book?isbn=`, `/author?name=`, etc.)
+- Fernet key MUST be <=32 characters; `pad_key()` pads to 32 with `P` before base64 encoding
+- Server overrides `log_request()` to suppress HTTP access logs (stealth requirement)
+- File uploads sanitized with `path.basename()` on server to prevent path traversal
+- Client auto-reconnects on failure using `DELAY` sleep loop — never crash on network error
+- Use `try/except` around all network and I/O operations — post errors back to server rather than crashing silently
+
+## Security Rules
+- NEVER commit real encryption keys — `settings.py` uses placeholder values
+- NEVER log encrypted payloads in plaintext
+- ALWAYS use the `cipher` object from `encryption.py` — never raw encryption calls
+- File transfers go through encrypt-then-send, decrypt-on-receive pattern exclusively
+- `incoming/` directory holds uploaded files from clients — never commit it
+
+## Testing
+- Test server locally with `C2_SERVER = "localhost"` and `PORT = 80` (or non-privileged port)
+- Use non-privileged port (e.g., 8080) when testing without root
+- Both server and client can run on the same machine for development
+
+## Do Not
+- Add web frameworks (Flask, Django, FastAPI) — the stdlib HTTP handler is intentional for minimal footprint
+- Change the HTTP path scheme without updating BOTH settings.py and the handler routing logic
+- Add async/await — the codebase is synchronous by design
+- Modify encryption.py unless absolutely necessary — it's a critical security component
