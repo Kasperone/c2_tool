@@ -38,5 +38,27 @@ desktop.ini
 *.log
 *.tmp
 
+# C2 databases (runtime state)
+c2_activity.db
+operators.db
+
+# TLS certificates and keys
+*.crt
+*.key
+*.csr
+*.pem
+ca.srl
+
+# Generated payloads
+payloads/output/
+*.exe
+
+# Deployment-specific config (edit default.yaml, not config.yaml)
+config.yaml
+
+# PyInstaller build artifacts
+*.spec
+__pyinstaller/
+
 # Hermes agent artifacts
 .hermes/

