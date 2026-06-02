@@ -19,7 +19,7 @@ FILE_SEND = "/reviews"
 RESPONSE = "/inventory"
 
 # Path to use for signifying the current working directory from a client using HTTP POST
-CWD_RESPONSE ="/title"
+CWD_RESPONSE = "/title"
 
 # POST variable name to use for assigning to command output from a client
 RESPONSE_KEY = "index"

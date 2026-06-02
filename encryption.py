@@ -1,4 +1,4 @@
-from cryptography.fernet import Fernet
+from cryptography.fernet import Fernet, InvalidToken
 from base64 import urlsafe_b64encode
 from settings import KEY
 
@@ -9,4 +9,9 @@ def pad_key(key):
     return key
 
 # Pad our key to 32 chars, byte encode it, urlsafe_b64 encode that, and then create the AES/CBC mode cipher object
-cipher = Fernet(urlsafe_b64encode(pad_key(KEY).encode()))
+try:
+    cipher = Fernet(urlsafe_b64encode(pad_key(KEY).encode()))
+except Exception as e:
+    print(f"Failed to initialize encryption cipher: {e}")
+    print("Check that KEY in settings.py is a valid string of 32 characters or fewer.")
+    raise
