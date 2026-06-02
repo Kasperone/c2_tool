@@ -18,8 +18,8 @@ incoming/
 # Scratch / temp files
 temp.py
 
-# Stray files not part of the project
-packages.microsoft.gpg
+# Stray files
+*.gpg
 
 # IDE / editor
 .vscode/
@@ -33,6 +33,10 @@ desktop.ini
 
 # Secrets - uncomment if settings.py contains real keys for production
 # settings.py
+
+# Project specific
+*.log
+*.tmp
 
 # Hermes agent artifacts
 .hermes/
