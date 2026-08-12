@@ -40,7 +40,9 @@ c2_tool/
 │   │   ├── persistence.py    # cron, systemd, registry Run, scheduled tasks
 │   │   ├── p2p_pivot.py      # PivotNode: TCP chaining between implants
 │   │   ├── dns_tunnel.py     # DNSTunnelServer/Client: TXT record tunnel
-│   │   └── multi_op.py       # AsyncC2Server (aiohttp) + OperatorAuth (SQLite)
+│   │   ├── multi_op.py       # AsyncC2Server (aiohttp) + OperatorAuth (SQLite)
+│   │   ├── enum_local.py     # Local recon: OS, user, network, processes, security products
+│   │   └── browser_cookies.py  # Session cookie theft: Chrome, Firefox, Edge, Brave
 │   ├── crypto/
 │   │   └── encryption.py     # create_cipher() — Fernet factory
 │   └── logging/
@@ -90,7 +92,9 @@ Every client-side command is prefixed with `client`:
 | `client socks start [port]` | Start SOCKS5 proxy on implant |
 | `client socks stop` | Stop SOCKS5 proxy |
 | `client scan <host> [ports] [timeout]` | TCP port scan |
-| `client screenshot [path]` | Capture screen |
+| `client screenshot [path]` | Capture screen and auto-upload |
+| `client enum [all\|os\|user\|network\|processes\|security]` | Local system enumeration |
+| `client cookies [all\|chrome\|firefox\|edge\|brave\|domain <domain>]` | Browser cookie extraction |
 | `client keylog start\|stop\|dump\|status` | Keylogger |
 | `client credharvest all\|ssh\|chrome\|history\|wifi` | Credential harvesting |
 | `client rportfwd create <id> <lport> <rhost> <rport>` | Reverse port forward |
