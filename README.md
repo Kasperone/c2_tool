@@ -21,13 +21,20 @@ A Python-based Command and Control framework for red team operations and securit
 - **Alternative transports** - WebSocket and SOCKS proxy
 
 ### Post-Exploitation
-- **Persistent PTY** - full interactive shell with environment state
-- **Persistence modules** - cron, systemd, registry, scheduled tasks
-- **Port scanner** - TCP connect scanning with port ranges
-- **Credential harvesting** - browser passwords, SSH keys, WiFi credentials
-- **Screenshot capture** - cross-platform screen capture
-- **Keylogger** - keystroke capture and dumping
-- **Reverse port forward** - expose remote services through implant
+- **Persistent PTY** — full interactive shell with environment state
+- **Persistence modules** — cron, systemd, registry, scheduled tasks
+- **Port scanner** — TCP connect scanning with port ranges
+- **Credential harvesting** — browser passwords, SSH keys, WiFi credentials
+- **Screenshot capture** — cross-platform screen capture
+- **Keylogger** — keystroke capture and dumping
+- **Reverse port forward** — expose remote services through implant
+- **Clipboard monitoring** — read clipboard, detect credentials/tokens
+- **Host discovery** — ARP scan + ICMP ping sweep of local subnets
+- **Privesc detection** — SUID/SGID binaries, sudo misconfigs, Docker escape, kernel CVEs
+- **Webcam capture** — photo and video from system cameras
+- **AD enumeration** — domain users/groups, computers, GPOs, trusts, ACL
+- **Scripting API** — alias-based multi-step command execution
+- **Activity reports** — session stats, command statistics, timeline export
 
 ### Advanced Operations
 - **P2P pivot links** - chain implants through TCP tunnels
@@ -49,7 +56,7 @@ c2_tool/
 │   ├── client/          # Client-side beacon, PTY, commands
 │   ├── crypto/          # Encryption utilities
 │   ├── logging/         # SQLite activity logging
-│   ├── modules/         # Plugin system (8 modules)
+│   ├── modules/         # Plugin system (15 modules)
 │   ├── server/          # HTTP handler, sessions, server
 │   └── transport/       # mTLS, SOCKS, WebSocket
 ├── config/

