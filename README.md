@@ -56,7 +56,7 @@ c2_tool/
 │   ├── client/          # Client-side beacon, PTY, commands
 │   ├── crypto/          # Encryption utilities
 │   ├── logging/         # SQLite activity logging
-│   ├── modules/         # Plugin system (15 modules)
+│   ├── modules/         # Plugin system (18 modules)
 │   ├── server/          # HTTP handler, sessions, server
 │   └── transport/       # mTLS, SOCKS, WebSocket
 ├── config/
