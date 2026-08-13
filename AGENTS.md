@@ -40,7 +40,16 @@ c2_tool/
 │   │   ├── persistence.py    # cron, systemd, registry Run, scheduled tasks
 │   │   ├── p2p_pivot.py      # PivotNode: TCP chaining between implants
 │   │   ├── dns_tunnel.py     # DNSTunnelServer/Client: TXT record tunnel
-│   │   └── multi_op.py       # AsyncC2Server (aiohttp) + OperatorAuth (SQLite)
+│   │   ├── multi_op.py         # AsyncC2Server (aiohttp) + OperatorAuth (SQLite)
+│   │   ├── enum_local.py     # Local recon: OS, user, network, processes, security products
+│   │   ├── browser_cookies.py  # Session cookie theft: Chrome, Firefox, Edge, Brave
+│   │   ├── clipboard_monitor.py  # Clipboard read, credential detection, watch mode
+│   │   ├── host_discovery.py   # ARP scan + ICMP ping sweep
+│   │   ├── privesc_detect.py   # SUID/SGID, sudo misconfigs, Docker escape, kernel CVEs
+│   │   ├── webcam_capture.py   # Photo/video from system cameras
+│   │   ├── ad_enum.py          # AD domain recon: users, groups, computers, GPOs
+│   │   ├── scripting_api.py    # Alias storage + multi-step command execution
+│   │   └── activity_report.py  # Session stats, command reports, timeline export
 │   ├── crypto/
 │   │   └── encryption.py     # create_cipher() — Fernet factory
 │   └── logging/
@@ -90,7 +99,17 @@ Every client-side command is prefixed with `client`:
 | `client socks start [port]` | Start SOCKS5 proxy on implant |
 | `client socks stop` | Stop SOCKS5 proxy |
 | `client scan <host> [ports] [timeout]` | TCP port scan |
-| `client screenshot [path]` | Capture screen |
+| `client screenshot [path]` | Capture screen and auto-upload |
+| `client enum [all\|os\|user\|network\|processes\|security]` | Local system enumeration |
+| `client cookies [all\|chrome\|firefox\|edge\|brave\|domain <domain>]` | Browser cookie extraction |
+| `client clipboard [monitor|watch [secs]|stop|status]` | Clipboard monitoring |
+| `client host_discovery [all|arp|icmp|subnets]` | ARP/ICMP host discovery |
+| `client privesc [all|suid|sudo|capabilities|kernel|docker]` | Privesc detection |
+| `client webcam [list|capture|record]` | Webcam photo/video capture |
+| `client ad_enum [all|domain|users|groups|computers|gpo|trusts|acl]` | AD enumeration |
+| `client alias [create|list|remove]` | Alias management |
+| `client exec <name> [args...]` | Execute alias/script |
+| `client report [all|sessions|commands|timeline|export]` | Activity reports |
 | `client keylog start\|stop\|dump\|status` | Keylogger |
 | `client credharvest all\|ssh\|chrome\|history\|wifi` | Credential harvesting |
 | `client rportfwd create <id> <lport> <rhost> <rport>` | Reverse port forward |
